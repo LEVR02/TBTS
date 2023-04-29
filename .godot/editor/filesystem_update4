@@ -1,8 +1,0 @@
-res://default_env.tres
-res://LevelMain.tscn
-res://Wall.tscn
-res://Map.tscn
-res://Tile.tscn
-res://Op.tscn
-res://Map.gd
-res://LevelMain.gd
