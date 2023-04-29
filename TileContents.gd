@@ -19,7 +19,7 @@ func start(x,y):
 	self.y = y
 	pass
 func start_extra(x,y,extra):
-	start(x,y)
+	start(x, y)
 	pass
 func update_pos(x,y):
 	self.x = x

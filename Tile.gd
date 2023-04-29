@@ -22,7 +22,7 @@ var x_pos
 var y_pos
 var current_anim 
 
-export(bool) var covered = false
+@export var covered: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -55,7 +55,7 @@ func init_tile(x_arg, y_arg, x_pos, y_pos,w,h):
 		# $Tile.get_node("Tile_Sprite").hide()
 
 func clear_contents(to_remove):
-	to_remove.disconnect("selected",self,"_on_TileContents_selected")
+	to_remove.disconnect("selected", Callable(self, "_on_TileContents_selected"))
 	remove_child(to_remove)
 	contents = null
 	
@@ -67,7 +67,7 @@ func set_contents(to_set):#,pos_x,pos_y,scale):
 	#ts.start()
 	#add_child(ts)
 	contents = to_set
-	to_set.connect("selected", self, "_on_TileContents_selected")
+	to_set.connect("selected", Callable(self, "_on_TileContents_selected"))
 	
 func set_tile_texture(to_set):
 	$TileArea.get_node("Tile_Sprite").set_sprite_frames(to_set)
@@ -109,15 +109,15 @@ func _on_Tile_input_event(viewport, event, shape_idx):
 	if event is InputEventMouseButton:
 		var state = get_node("/root/State")
 		if event.pressed and state.allow_inputs: 
-			if event.button_index == BUTTON_LEFT:
+			if event.button_index == MOUSE_BUTTON_LEFT:
 				pressed = true
-				if contents != null and !event.doubleclick:
+				if contents != null and !event.double_click:
 					if state.selection == 0:
 						contents.clicked()
 						# state.path.append(self)
 				else:
 					if state.selection > 0:
-						if !event.doubleclick:
+						if !event.double_click:
 							#var last_node = state.path[state.path.size]
 							state.selection += 1
 							emit_signal("add_path", self)
@@ -125,10 +125,10 @@ func _on_Tile_input_event(viewport, event, shape_idx):
 						else:
 							state.end_tile = self
 							emit_signal("finish_path",self)
-			elif event.button_index == BUTTON_RIGHT:
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				emit_signal("aim",self)
 		else:
-			if event.button_index == BUTTON_LEFT:
+			if event.button_index == MOUSE_BUTTON_LEFT:
 				pressed = false
 func play_select_sprite():
 	$TileArea.get_node("Tile_Sprite").play("select")

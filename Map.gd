@@ -10,8 +10,8 @@ signal end_path
 # var a = 2
 # var b = "text"
 
-export(PackedScene) var tile_scene
-export(bool) var debug
+@export var tile_scene: PackedScene
+@export var debug: bool
 var t_scale = 0.05
 var op_scale = 0.75
 var c_scale = 0.05
@@ -33,7 +33,7 @@ var play_collided_tiles = []
 var curr_team
 #var cycles_waited = 0
 var can_fire = false
-onready var state = get_node("/root/State")
+@onready var state = get_node("/root/State")
 # func find_tile(x,y):
 func tile_valid(x,y):
 	if x >=0 and x < width and y >= 0 and y < height and x < map_array.size() \
@@ -114,10 +114,10 @@ func start_map(s_height, s_width, contents, s_curr_team):
 	#frames.add_animation("select")
 	#image.load("res://art/tile.png")
 	#texture.create_from_image(image)
-	var temp_tile = tile_scene.instance()
+	var temp_tile = tile_scene.instantiate()
 	var texture = temp_tile.get_tile_texture()
-	var t_width = texture.get_frame("default",0).get_width() * t_scale
-	var t_height = texture.get_frame("default",0).get_height() * t_scale
+	var t_width = texture.get_frame_texture("default",0).get_width() * t_scale
+	var t_height = texture.get_frame_texture("default",0).get_height() * t_scale
 	temp_tile.queue_free()
 	var padding = 10
 	for x in range(width):
@@ -128,17 +128,17 @@ func start_map(s_height, s_width, contents, s_curr_team):
 		var x_pos = t_width/2 + padding + x * (t_width + padding)
 		for y in range(height):
 			var y_pos = t_height/2 + padding + y * (t_height + padding)
-			var tile = tile_scene.instance()
+			var tile = tile_scene.instantiate()
 			tile.get_node("TileArea").position = Vector2(x_pos, y_pos)
 			tile.get_node("TileArea").scale = Vector2(t_scale, t_scale)
 			tile.init_tile(x,y,x_pos,y_pos,t_width,t_height)
 			map_array[x].append(tile)
 			base_array_anims[x].append("default")
 			add_child(tile)
-			tile.connect("selected",self,"_on_Tile_selected")
-			tile.connect("add_path",self,"_on_Tile_add_path")
-			tile.connect("finish_path",self,"_on_Tile_finish_path")
-			tile.connect("aim",self,"_on_Tile_aim")
+			tile.connect("selected", Callable(self, "_on_Tile_selected"))
+			tile.connect("add_path", Callable(self, "_on_Tile_add_path"))
+			tile.connect("finish_path", Callable(self, "_on_Tile_finish_path"))
+			tile.connect("aim", Callable(self, "_on_Tile_aim"))
 			#visited[x].append(false)
 			costs[x].append(0)
 	for c in contents:
@@ -184,7 +184,7 @@ func calc_path_length(path):
 	else:
 		var total = 0
 		var last = path[0]
-		for i in path.slice(1,path.size()-1):
+		for i in path.slice(1,path.size()):
 			total += calc_diff_length(i,last)
 			last = i
 		return total
@@ -250,7 +250,7 @@ func _on_Tile_finish_path(tile):
 	and state.path[-1].y == tile.y and state.full_path[-1].x == tile.x \
 	and state.full_path[-1].y == tile.y and state.selected_op != null \
 	and state.selected_tile != null and state.end_tile != null and state.end_tile.traversable():
-		end_turn()
+		f_end_turn()
 		emit_signal('end_path')
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
@@ -264,15 +264,16 @@ func play_path(op):
 	$Path2D/PathFollow2D.add_child(op)
 	tween_op = op
 	var n = path.get_point_count()
-	var tween = get_node("Tween")
-	
+	#var tween = get_node("Tween")
+	var tween = get_tree().create_tween()
+	tween.connect("finished", Callable(self,"_on_Tween_tween_completed"))
 	#for i in range(n):
 	#	$Path2D/PathFollow2D.set_unit_offset(i/n)
-	tween.interpolate_property($Path2D/PathFollow2D,"unit_offset",0,1,n/100.0)
-	tween.start()
+	tween.tween_property($Path2D/PathFollow2D,"progress_ratio",1,n/100.0)
+	#tween.start()
 	#$Path2D/PathFollow2D.remove_child(op)
 	return
-func _on_Tween_tween_completed(_object, _key):
+func _on_Tween_tween_completed():
 	$Path2D.curve.clear_points()
 	$Path2D/PathFollow2D.remove_child(tween_op)
 	tween_op = null
@@ -364,7 +365,7 @@ func dfs_explore(start_x,start_y,depth_limit):
 						set_tile_anim(dir.x,dir.y,"avail")
 						ret.push_back(dir)
 					if curr_cost + 1.5 <= depth_limit and (curr_cost + 1.5 < costs[dir.x][dir.y] \
-					 or costs[dir.x][dir.y] == 0):
+					or costs[dir.x][dir.y] == 0):
 						dfs_stack.push_back(dir)
 						dfs_costs.push_back(curr_cost + 1.5)
 						costs[dir.x][dir.y] = curr_cost + 1.5
@@ -378,18 +379,18 @@ func next_possible_tiles(curr_x,curr_y,next_dx,next_dy):
 	Vector2(curr_x+1,curr_y+1),Vector2(curr_x+1,curr_y),Vector2(curr_x+1,curr_y-1)]
 	if next_dx > 0:
 		if next_dy == 0:
-			return dirs.slice(5,7)
+			return dirs.slice(5,8)
 		elif next_dy > 0:
-			return dirs.slice(4,6)
+			return dirs.slice(4,7)
 		else: 
-			var ret = dirs.slice(6,7)
+			var ret = dirs.slice(6,8)
 			ret.push_back(dirs[0])
 			return ret
 	elif next_dx == 0:
 		if next_dy > 0: 
-			return dirs.slice(3,5)
+			return dirs.slice(3,6)
 		elif next_dy < 0:
-			var ret = dirs.slice(0,1)
+			var ret = dirs.slice(0,2)
 			ret.push_back(dirs[7])
 			return ret
 		else:
@@ -397,11 +398,11 @@ func next_possible_tiles(curr_x,curr_y,next_dx,next_dy):
 			return "error"
 	else:
 		if next_dy == 0:
-			return dirs.slice(1,3)
+			return dirs.slice(1,4)
 		elif next_dy > 0:
-			return dirs.slice(2,4)
+			return dirs.slice(2,5)
 		else:
-			return dirs.slice(0,2)
+			return dirs.slice(0,3)
 			
 # OLD IMPLEMENTATION TO SHOW FIRING RANGE
 # similar to dfs_explore, except only returns border tiles (note, errors may occur if used with 
@@ -558,7 +559,7 @@ func _on_Tile_aim(target):
 		return
 	if state.selected_op.get_parent() == target:
 		state.selection = -1
-		end_turn()
+		f_end_turn()
 		emit_signal('end_path')
 		return
 	# Get the last position of the selected operator (either their current position or the last node
@@ -582,7 +583,7 @@ func _on_Tile_aim(target):
 			_on_Tile_finish_path(state.path[-1])
 		else:
 			emit_signal('end_path')
-		end_turn()
+		f_end_turn()
 		return
 	if state.selected_op != null and target != state.selected_op.get_parent() \
 	and target.valid_firing_target() and target.get_target().team != state.selected_op.team \
@@ -639,6 +640,7 @@ func process_aim():
 	if firing:
 		var path = gen_line(fire_start_grid_pos.x,fire_start_grid_pos.y,fire_target.x,fire_target.y,true)
 		var covered = path[0]
+		# TODO: may cause issues in the future due to slice functionality update (second argument now inclusive)
 		var tiles = path.slice(1,-1)
 		for tile in tiles:
 			if covered:
@@ -685,7 +687,7 @@ func process_aim():
 
 # ends or cancels the turn (cancels if state.selection == -1)
 # (resets animations and path
-func end_turn():
+func f_end_turn():
 	$PathLine.clear_points()
 	$FireLine.clear_points()
 	for i in range(width):
@@ -695,7 +697,7 @@ func end_turn():
 			#if map_array[i][j].contents != null:
 			#	map_array[i][j].contents.end_turn()
 	if (state.selection == -1):
-		$Path2D.curve.clear_points()			
+		$Path2D.curve.clear_points()
 	#emit_signal("end_turn")
 	
 func clear_map():
@@ -706,7 +708,7 @@ func clear_map():
 
 func _on_Map_collisions_ready():
 	for c in collisions:
-		if c.get_parent().get_filename() != "res://Tile.tscn":
+		if c.get_parent().get_scene_file_path() != "res://Tile.tscn":
 			collisions.erase(c)
 		#else: 
 			#c.get_parent().play_select_sprite()

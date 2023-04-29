@@ -4,8 +4,8 @@ extends Node
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
-export(PackedScene) var op_scene
-export(PackedScene) var wall_scene
+@export var op_scene: PackedScene
+@export var wall_scene: PackedScene
 
 var map_height = 10
 var map_width = 19
@@ -20,25 +20,25 @@ func _ready():
 # Op: Extra args: team number, move range, firing min range, firing (max) range, hp, atk
 func new_game():
 	var contents = []
-	contents.append(start_extra(op_scene,5,4,[1,5,0,7,100,10]))
+	contents.append(start_extra(op_scene,5,4,[1,5,0,5,100,10]))
 	contents.append(start_extra(op_scene,10,5,[2,3,5,7,100,10]))
-	contents.append(start_extra(op_scene,3,2,[1,5,3,7,100,10]))
-	contents.append(start(wall_scene,3,3))
-	contents.append(start(wall_scene,3,4))
-	contents.append(start(wall_scene,3,5))
-	contents.append(start(wall_scene,3,6))
+	contents.append(start_extra(op_scene,3,2,[1,2,0,1,100,10]))
+	contents.append(start(wall_scene, 3, 3))
+	contents.append(start(wall_scene, 3, 4))
+	contents.append(start(wall_scene, 3, 5))
+	contents.append(start(wall_scene, 3, 6))
 	$Map.start_map(map_height,map_width,contents,1)
 	
 # instantiates a tile contents (of scene) and adds it to the map
 func start(scene,x,y):
-	var c = scene.instance()
+	var c = scene.instantiate()
 	c.x = x
 	c.y = y
-	c.start(x,y)
+	c.start(x, y)
 	return c
 	
 func start_extra(scene,x,y,extra):
-	var c = scene.instance()
+	var c = scene.instantiate()
 	c.x = x
 	c.y = y
 	c.start_extra(x,y,extra)
@@ -52,7 +52,6 @@ func _on_Map_selected():
 	var state = get_node("/root/State")
 	if state.selected_op != null:
 		var op = state.selected_op
-		#print(op.x, ", ", op.y)
 		op.get_node("AS").play()
 		
 # Finish path: clear op from start tile, settle op into end tile, clear state variables

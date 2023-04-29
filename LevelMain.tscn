@@ -1,16 +1,17 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=5 format=3 uid="uid://bm3tdfmsiukw5"]
 
-[ext_resource path="res://LevelMain.gd" type="Script" id=1]
-[ext_resource path="res://Map.tscn" type="PackedScene" id=2]
-[ext_resource path="res://Wall.tscn" type="PackedScene" id=3]
-[ext_resource path="res://Op.tscn" type="PackedScene" id=4]
+[ext_resource type="Script" path="res://LevelMain.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://eepx0rcw2mdb" path="res://Map.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://c4kfxn2hgo2dr" path="res://Wall.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://dw8ar4qh1pwlu" path="res://Op.tscn" id="4"]
 
 [node name="LevelMain" type="Node"]
-script = ExtResource( 1 )
-op_scene = ExtResource( 4 )
-wall_scene = ExtResource( 3 )
+script = ExtResource("1")
+op_scene = ExtResource("4")
+wall_scene = ExtResource("3")
 
-[node name="Map" parent="." instance=ExtResource( 2 )]
+[node name="Map" parent="." instance=ExtResource("2")]
+
 [connection signal="end_path" from="Map" to="." method="_on_Map_end_path"]
 [connection signal="path_tween_completed" from="Map" to="." method="_on_Map_path_tween_completed"]
 [connection signal="selected" from="Map" to="." method="_on_Map_selected"]
