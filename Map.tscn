@@ -1,0 +1,44 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Map.gd" type="Script" id=1]
+[ext_resource path="res://Tile.tscn" type="PackedScene" id=3]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 0.5, 0.05 )
+
+[sub_resource type="Curve2D" id=2]
+_data = {
+"points": PoolVector2Array(  )
+}
+
+[node name="Map" type="Node2D"]
+script = ExtResource( 1 )
+tile_scene = ExtResource( 3 )
+debug = true
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource( 1 )
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="Path2D" type="Path2D" parent="."]
+curve = SubResource( 2 )
+
+[node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
+rotate = false
+cubic_interp = false
+loop = false
+
+[node name="PathLine" type="Line2D" parent="."]
+
+[node name="FireLine" type="Line2D" parent="."]
+width = 2.0
+default_color = Color( 1, 0, 0, 1 )
+
+[node name="DebugLine" type="Line2D" parent="."]
+default_color = Color( 0, 1, 0.227451, 1 )
+begin_cap_mode = 1
+[connection signal="collisions_ready" from="." to="." method="_on_Map_collisions_ready"]
+[connection signal="tween_completed" from="Tween" to="." method="_on_Tween_tween_completed"]
